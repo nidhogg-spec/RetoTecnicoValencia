@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from .models import CustomUser
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
@@ -9,22 +9,30 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls,user):
         token = super().get_token(user)
         token['nombre'] = user.nombre
-        token['usuario'] = user.usuario
+        token['username'] = user.username
         token['rol'] = user.rol
-        token['detalle'] = user.detalle
+        token['descripccion'] = user.descripccion
 
         return token
+        
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
+    contraseña = serializers.CharField(
         write_only = True, required=True, validators=[validate_password]
     )
+
     class Meta:
-        model = User
-        fields = ('nombre','contraseña','usuario','rol','detalle')
+        model = CustomUser
+        fields = ('nombre','contraseña','username','rol','descripccion',)
 
     def create(self, validated_data):
-        user = User.objects.create()
-        user.set_password(validated_data['password'])
+
+        user = CustomUser.objects.create(
+            username=validated_data['username'],
+            nombre=validated_data['nombre'],
+            rol=validated_data['rol'],
+            descripccion=validated_data['descripccion']
+        )
+        user.set_password(validated_data['contraseña'])
         user.save()
         
         return user
